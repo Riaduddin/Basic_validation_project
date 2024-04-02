@@ -1,0 +1,10 @@
+ipykernel
+nltk
+scikit-learn
+docx2txt
+joblib
+from-root
+langdetect
+fastapi
+uvicorn
+-e .
