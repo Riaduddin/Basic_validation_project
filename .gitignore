@@ -3,3 +3,4 @@ bas_val.egg-info
 __pycache__
 *.docx
 log
+*.txt
