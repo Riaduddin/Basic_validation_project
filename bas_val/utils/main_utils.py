@@ -39,4 +39,5 @@ def docx_to_text(file):
             text=docx2txt.process(file)
             return text
         except Exception as e:
+            logging.info(e)
             raise bas_val_Exception(sys,e)
