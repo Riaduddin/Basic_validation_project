@@ -2,6 +2,9 @@ from bas_val.component.data_transformation import DataTransformation
 from bas_val.utils.main_utils import detect_language,load_model, load_vectorizer,docx_to_text
 from bas_val.constant import LABELS
 
+# import nltk
+# nltk.download('punkt')
+
 
 def checking(contents):
     texts=docx_to_text(contents)
