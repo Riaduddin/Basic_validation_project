@@ -14,12 +14,26 @@ async def open_docx(file: UploadFile = File(...)):
         -taking docx file & return the document file
         -if any images include in the text file then return invalid
     """
-    contents = await file.read()
-    texts=docx_to_text(contents)
+    if not file.filename.endswith('.docx'):
+            raise HTTPException(status_code=400, detail="Only DOCX files are allowed")
+        
+    upload_dir = 'uploads' 
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # save the uploaded file
+    file_path = os.path.join(upload_dir, file.filename)
+    with open(file_path, 'wb') as f:
+        f.write(await file.read())
+    
+    texts=docx_to_text(file_path)
     language = detect_language(texts)
 
     if language !='en':
         return {"content ": 'doc_file is garbage language'}
+    
+    word_counts=FileOperation_word_count(file_path)
+    counts=word_counts.file_process()
+
     texts=DataTransformation(texts)
     cleaned_text=texts.clean_text()
 
@@ -31,9 +45,10 @@ async def open_docx(file: UploadFile = File(...)):
     topic_index = topic.argmax()
     label='doc_file is {}'.format(LABELS[topic_index])
     
-    return {'content':label}
+    return {'content':label,
+            'Number of words in the docx file ':counts}
 
 
 if __name__=='__main__':
     import uvicorn
-    uvicorn.run(host="0.0.0.0", port=8000,reload=True)
+    uvicorn.run("main:app",host="127.0.0.1", port=8080,reload=True)
