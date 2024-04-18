@@ -4,7 +4,7 @@ from bas_val.utils.main_utils import detect_language,load_model, load_vectorizer
 from bas_val.constant import LABELS
 from bas_val.logger import logging
 from bas_val.utils.word_counts import FileOperation_word_count
-from docx import Document
+from bas_val.utils.page_count import convert_and_count_pages
 from io import BytesIO
 import os
 
@@ -12,10 +12,6 @@ app=FastAPI()
 
 @app.post("/open-docx")
 async def open_docx(file: UploadFile = File(...)):
-    """
-        -taking docx file & return the document file
-        -if any images include in the text file then return invalid
-    """
     if not file.filename.endswith('.docx'):
         raise HTTPException(status_code=400, detail="Only DOCX files are allowed")
 
@@ -33,6 +29,10 @@ async def open_docx(file: UploadFile = File(...)):
     word_counts = FileOperation_word_count(contents)
     counts = word_counts.file_process()
 
+    page_count=convert_and_count_pages(contents)
+    print("number of pages:",page_count)
+
+
     texts = DataTransformation(texts)
     cleaned_text = texts.clean_text()
 
@@ -45,6 +45,7 @@ async def open_docx(file: UploadFile = File(...)):
     label = 'doc_file is {}'.format(LABELS[topic_index])
 
     return {'content': label,
+            'Number of pages': page_count,
             'Number of words in the docx file': counts}
     
 if __name__=='__main__':

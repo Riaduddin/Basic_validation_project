@@ -3,6 +3,7 @@ from bas_val.utils.main_utils import detect_language,load_model, load_vectorizer
 from bas_val.constant import LABELS
 from bas_val.utils.word_counts import FileOperation_word_count
 from bas_val.logger import logging
+from bas_val.utils.page_count import convert_and_count_pages
 
 # import nltk
 # nltk.download('punkt')
@@ -15,8 +16,11 @@ def checking(contents):
     if language !='en':
         return {"content ": 'doc_file is garbage'}
 
-    counts=FileOperation_word_count(contents)
-    print('length of the texts: ',counts.file_process())
+    #counts=FileOperation_word_count(contents)
+    # print('length of the texts: ',counts.file_process())
+
+    page_count=convert_and_count_pages(contents)
+    print("number of pages:",page_count)
 
     texts=DataTransformation(texts)
     cleaned_text=texts.clean_text()

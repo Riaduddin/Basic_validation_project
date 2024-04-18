@@ -10,4 +10,7 @@ uvicorn
 boto3
 mypy-boto3-s3
 pandas
+docx2pdf
+python-docx
+PyMuPDF
 -e .
