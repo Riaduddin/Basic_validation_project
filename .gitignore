@@ -5,3 +5,4 @@ __pycache__
 log
 *.txt
 vrenv
+FastAPI_env
