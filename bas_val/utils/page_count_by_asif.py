@@ -18,20 +18,21 @@ def counting_pages(pdf_path):
 
 def convert_and_count_pages(docx_path):
     try:
+        print(docx_path)
         # Create an 'upload' folder if it doesn't exist
-        upload_folder = os.path.join(os.path.dirname(docx_path), "upload")
+        upload_folder = "./uploads"
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
-        
+        pdf_path = os.path.join(upload_folder, os.path.basename(docx_path).replace(".docx", ".pdf"))
         # Convert DOCX to PDF
-        convert(docx_path)
+        convert(docx_path,pdf_path)
         
         # Move the converted PDF to the 'upload' folder
-        pdf_path = os.path.join(os.path.dirname(docx_path), os.path.basename(docx_path).replace(".docx", ".pdf"))
-        shutil.move(pdf_path, os.path.join(upload_folder, os.path.basename(pdf_path)))
+        #pdf_path = os.path.join(os.path.dirname(docx_path), os.path.basename(docx_path).replace(".docx", ".pdf"))
+        #shutil.move(pdf_path, os.path.join(upload_folder, os.path.basename(pdf_path)))
         
         # PDF path after moving
-        pdf_path = os.path.join(upload_folder, os.path.basename(pdf_path))
+        #pdf_path = os.path.join(upload_folder, os.path.basename(pdf_path))
         
         # Count pages of the converted PDF from the 'upload' folder
         num_pages = counting_pages(pdf_path)

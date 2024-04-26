@@ -16,11 +16,11 @@ async def open_docx(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only DOCX files are allowed")
 
     try:
-        temp_dir = 'temp'
-        os.makedirs(temp_dir, exist_ok=True)
-        temp_file_path = os.path.join(temp_dir, file.filename)
-        with open(temp_file_path, 'wb') as f:
-            f.write(await file.read())
+        #temp_dir = 'temp'
+       # os.makedirs(temp_dir, exist_ok=True)
+        #temp_file_path = os.path.join(temp_dir, file.filename)
+        # with open(temp_file_path, 'wb') as f:
+        #     f.write(await file.read())
 
         # Pass the file path to the convert_and_count_pages function
         page_count = convert_and_count_pages(temp_file_path)
