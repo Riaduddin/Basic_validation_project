@@ -95,22 +95,23 @@ def counting_pages(pdf_path):
         print(f"Error counting pages: {e}")
         return None
 
-def convert_and_count_pages(docx_path):
+def convert_and_count_pages(docx_path,pdf_path):
     try:
-        print(docx_path)
+        #print('file_path of docx:',docx_path)
         logging.info("Entering the convert and count pages")
-        # Create an 'upload' folder if it doesn't exist
-        upload_folder = os.path.join(os.getcwd(), "upload")
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)
-        logging.info('Created upload folders')
-        #pdf_filename = os.path.join(os.path.dirname(docx_path), os.path.basename(docx_path).replace(".docx", ".pdf"))
+        # upload_folder = os.path.join(os.getcwd(), "upload")
+        # if not os.path.exists(upload_folder):
+        #     os.makedirs(upload_folder)
+    
+        #pdf_path = os.path.join(upload_folder, 'output.pdf')
+        # logging.info("PDF path created")
+        # logging.info("location of the file: {pdf_path}")
         #print('pdf filename: ',pdf_filename)
         # pdf_path=os.path.join(upload_folder,pdf_filename)
         # print('1st_pdf_path:',pdf_path)
         # Convert DOCX to PDF
         logging.info("Start Converting the pdf")
-        convert(input_path=docx_path)
+        convert(docx_path,pdf_path)
         
         # Move the converted PDF to the 'upload' folder
         # pdf_path = os.path.join(os.path.dirname(docx_path), os.path.basename(docx_path).replace(".docx", ".pdf"))
