@@ -1,13 +1,4 @@
 import string
-<<<<<<< HEAD
-# from nltk.tokenize import word_tokenize
-# from nltk.corpus import stopwords
-=======
-# import nltk
-# nltk.download('punkt')
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
->>>>>>> code_by_asif
 import sys
 from bas_val.exception import bas_val_Exception
 from bas_val.logger import logging
