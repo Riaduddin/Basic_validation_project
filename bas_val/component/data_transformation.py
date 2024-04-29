@@ -1,4 +1,6 @@
 import string
+# import nltk
+# nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import sys
