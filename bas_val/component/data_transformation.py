@@ -1,9 +1,10 @@
 import string
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
+# from nltk.tokenize import word_tokenize
+# from nltk.corpus import stopwords
 import sys
 from bas_val.exception import bas_val_Exception
 from bas_val.logger import logging
+import re
 
 class DataTransformation:
     def __init__(self,text):
@@ -19,17 +20,19 @@ class DataTransformation:
             # Remove punctuation
             text = self.text.translate(str.maketrans('', '', string.punctuation))
             
-            logging.info("Tokenizing the text")
+            # logging.info("Tokenizing the text")
             # Tokenize the text
-            tokens = word_tokenize(text)
+            #tokens = word_tokenize(text)
 
             # Remove stopwords
-            stop_words = set(stopwords.words('english'))
-            filtered_tokens = [word for word in tokens if word.lower() not in stop_words]
+            #stop_words = set(stopwords.words('english'))
+            #filtered_tokens = [word for word in tokens if word.lower() not in stop_words]
 
             # Join the filtered tokens into cleaned text
-            cleaned_text = ' '.join(filtered_tokens)
+            # cleaned_text = ' '.join(filtered_tokens)
+            text=re.sub(r'\n','', text)
+            text=re.sub(r'\t','',text)
             logging.info("Exited clean_text_object method of DataTransformation class")
-            return cleaned_text
+            return text
         except Exception as e:
             raise bas_val_Exception(sys,e)
