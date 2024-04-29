@@ -7,6 +7,8 @@ from bas_val.utils.word_counts import FileOperation_word_count
 from bas_val.utils.page_count import convert_and_count_pages,counting_pages
 from io import BytesIO
 from docx2pdf import convert
+# import nltk
+# nltk.download('punkt')
 import os
 
 app=FastAPI()
