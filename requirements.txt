@@ -12,5 +12,7 @@ mypy-boto3-s3
 pandas
 docx2pdf
 python-docx
+transformer
+PyPDF2
 PyMuPDF
 -e .
