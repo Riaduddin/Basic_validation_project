@@ -7,8 +7,12 @@ from bas_val.utils.word_counts import FileOperation_word_count
 from bas_val.utils.page_count import convert_and_count_pages,counting_pages
 from io import BytesIO
 from docx2pdf import convert
-# import nltk
-# nltk.download('punkt')
+from ats_sys.ats import removing_other_countries_applicant
+from transformers import pipeline
+from ats_sys.ats import removing_other_countries_applicant
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+from ats_sys.utils.chunking import create_chunks
+from ats_sys.utils import clean_text,pdf_to_text,loading_cities,extract_text_from_docx_file
 import os
 
 app=FastAPI()
@@ -72,6 +76,49 @@ async def open_docx(file: UploadFile = File(...)):
     return {'content': label,
             'Number of pages': page_count,
             'Number of words in the docx file': counts}
+
+@app.post("/checking_doc")
+async def checking_doc(file: UploadFile = File(...)):
+    logging.info("Start the process")
+    if not file.filename.endswith('.docx'):
+        raise HTTPException(status_code=400, detail="Only DOCX files are allowed")
+    upload_folder = os.path.join(os.getcwd(), "upload")
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    docx_path=os.path.join(upload_folder, 'input.docx')
+    with open(docx_path, "wb") as buffer:
+        buffer.write(await file.read())
+    # logging.info("Start the process")
+    # return {'About applications': removing_other_countries_applicant(docx_path)}
+
+    tokenizer = AutoTokenizer.from_pretrained("dslim/distilbert-NER")
+    model = AutoModelForTokenClassification.from_pretrained("dslim/distilbert-NER")
+    input_text = extract_text_from_docx_file(docx_path)
+    input_text=clean_text(input_text)
+
+    chunks=create_chunks(input_text,512)
+    nlp = pipeline("ner", model=model, tokenizer=tokenizer)
+    results=[]
+    for chunk in chunks:
+        chunk=' '.join(chunk)
+        ner_results=nlp(chunk)
+        results.append(ner_results)
+    logging.info("Completing the prediction of every words")
+    locations=loading_cities()
+    for result in results:
+        for x in result:
+            #print(x)
+            entity=x['entity']
+            # print(entity)
+            if entity in ["B-LOC", "I-LOC","B-ORG","I-ORG"]:
+                #print(x['word'])
+                if x['word'] in locations:
+                    #print(entity)
+                # if data['city'].isin(x['word']).any():
+                    #print(x['word'])
+                    return f"Application {docx_path} is from the USA"
+    return {f"Application {docx_path} is not from the USA"}
+    
     
 if __name__=='__main__':
     import uvicorn

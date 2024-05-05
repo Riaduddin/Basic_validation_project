@@ -3,9 +3,10 @@ import string
 import re
 import PyPDF2
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForTokenClassification
+from bas_val.logger import logging
 
 def clean_text(text):
+    logging.info("Entering into the cleaning processing")
     # Remove punctuation
     text = text.translate(str.maketrans('', '', string.punctuation))
     
@@ -20,10 +21,11 @@ def clean_text(text):
     #cleaned_text = ' '.join(filtered_tokens)
     text=re.sub(r'\n','', text)
     text=re.sub(r'\t','',text)
-    
+    logging.info("Ending the clean task")
     return text
 
 def read_words_from_file(file_path):
+    logging.info("Entering into the read_words_from_file method")
     words = []
     with open(file_path, 'r') as file:
         # Read all lines from the file
@@ -33,10 +35,12 @@ def read_words_from_file(file_path):
             line_words = line.split()
             # Extend the words list with the words from the current line
             words.extend(line_words)
+    logging.info("Ending the read_words_from_file method")
     return words
 
 # Load DOCX file and extract text
 def extract_text_from_docx_file(uploaded_file):
+    logging.info("Entering into the extract_text_from_docx_file method")
     # Use docx2txt to extract text from a DOCX file
     return docx2txt.process(uploaded_file)
 
@@ -51,11 +55,8 @@ def pdf_to_text(pdf_path):
     return text
 
 def loading_cities():
+    logging.info("Entering into the loading_cities method")
     data=pd.read_csv('usa_cities.csv')
     cities=list(data['city'])
     return cities
 
-def load_model():
-    tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
-    model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
-    return tokenizer, model
