@@ -1,6 +1,7 @@
 import os
 
 DATABASE_NAME:str="bas_val"
+
 LABELS: str=["garbage","valid"]
 
 MODEL_DIR: str="model"

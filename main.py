@@ -2,74 +2,65 @@ from fastapi import File, UploadFile, FastAPI,HTTPException
 from bas_val.component.data_transformation import DataTransformation
 from bas_val.utils.main_utils import detect_language,load_model, load_vectorizer,docx_to_text
 from bas_val.constant import LABELS
-from bas_val.logger import logging
 from bas_val.utils.word_counts import FileOperation_word_count
-from bas_val.utils.page_count import convert_and_count_pages,counting_pages
-from io import BytesIO
+from bas_val.utils.page_count import counting_pages
 from docx2pdf import convert
-from ats_sys.ats import removing_other_countries_applicant
 from transformers import pipeline
-from ats_sys.ats import removing_other_countries_applicant
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from ats_sys.utils.chunking import create_chunks
-from ats_sys.utils import clean_text,pdf_to_text,loading_cities,extract_text_from_docx_file
+from ats_sys.utils import clean_text,loading_cities,extract_text_from_docx_file
 import os
 
 app=FastAPI()
 
 @app.post("/open-docx")
-async def open_docx(file: UploadFile = File(...)):
+async def check_basic_validity(file: UploadFile = File(...)):
+
+    """
+    This function is used to check the basic validity of a document.
+    It takes a docx file as an input and returns a JSON response.
+    The JSON response contains the basic validity of the docx file.
+    The JSON response also contains the number of pages and words in the docx file.
+    """
+
     if not file.filename.endswith('.docx'):
         raise HTTPException(status_code=400, detail="Only DOCX files are allowed")
 
-    # name_parts=docx_path.split('.')
-    # # # Create an 'upload' folder if it doesn't exist
-    # file_name=name_parts[0].join('.pdf')
-    # print('filename is: ',file_name)
+    #creating folder for storing docx file and pdf file
     upload_folder = os.path.join(os.getcwd(), "upload")
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
+
     docx_path=os.path.join(upload_folder, 'input.docx')
     with open(docx_path, "wb") as buffer:
         buffer.write(await file.read())
-   
-
-    #logging.info('Created upload folders')
-    # read_file = await file.read() # read the docx file 
-    # contents = BytesIO(read_file) # create a file like object from the contents
-
-    pdf_path = os.path.join(upload_folder, 'output.pdf')
     
-    # print(contents.getvalue(), 'line 26')
-    # print(contents.getbuffer(), 'line 26')
-    texts = docx_to_text(docx_path)
-    # except:
-    #     texts=docx_to_text(file)
-    language = detect_language(texts)
+    texts = docx_to_text(docx_path) # Convert DOCX to text
+   
+    language = detect_language(texts) # Detecting the language english or not
 
     if language != 'en':
         return {"content": 'doc_file is in a non-English language'}
 
     word_counts = FileOperation_word_count(docx_path)
     counts = word_counts.file_process()
-    #try:
-    #logging.info("trying the read_file")
-    convert(docx_path, pdf_path)
-    page_count=counting_pages(pdf_path)
-        #print("number of pages:",page_count)
-    # except:
-    #     logging.info("trying the contents")
-    #     page_count=counting_pages(pdf_path)
+    
+    pdf_path = os.path.join(upload_folder, 'output.pdf')
+    convert(docx_path, pdf_path) # Convert docx to pdf
 
+    page_count=counting_pages(pdf_path) #page count
 
+    #cleaning the text 
     texts = DataTransformation(texts)
     cleaned_text = texts.clean_text()
-
+    
+    #loading the model and vectorizer
     vectorizer = load_vectorizer()
     model = load_model()
     text_vector = vectorizer.transform([cleaned_text])
-    topic = model.transform(text_vector)
+    topic = model.transform(text_vector) #transforming the text into vector for similarity
 
+    #Matching the predicting labels
     topic_index = topic.argmax()
     label = 'doc_file is {}'.format(LABELS[topic_index])
 
@@ -77,46 +68,52 @@ async def open_docx(file: UploadFile = File(...)):
             'Number of pages': page_count,
             'Number of words in the docx file': counts}
 
+
+
 @app.post("/checking_doc")
-async def checking_doc(file: UploadFile = File(...)):
-    logging.info("Start the process")
+async def checking_doc_location(file: UploadFile = File(...)):
+    """
+    This function is to check any relation of the participant with the USA
+    It takes a docx file as an input and returns a JSON response of the applicant is from 
+    USA or not.
+    """
+
     if not file.filename.endswith('.docx'):
         raise HTTPException(status_code=400, detail="Only DOCX files are allowed")
+    
+    #creating folder for storing docx file and pdf file
     upload_folder = os.path.join(os.getcwd(), "upload")
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
-    docx_path=os.path.join(upload_folder, 'input.docx')
+    docx_path=os.path.join(upload_folder, file.filename)
     with open(docx_path, "wb") as buffer:
         buffer.write(await file.read())
-    # logging.info("Start the process")
-    # return {'About applications': removing_other_countries_applicant(docx_path)}
 
-    tokenizer = AutoTokenizer.from_pretrained("dslim/distilbert-NER")
-    model = AutoModelForTokenClassification.from_pretrained("dslim/distilbert-NER")
+    #Calling tokenizer and model of pretrained distil bert from huggingface
+    tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
+    model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
     input_text = extract_text_from_docx_file(docx_path)
     input_text=clean_text(input_text)
 
-    chunks=create_chunks(input_text,512)
-    nlp = pipeline("ner", model=model, tokenizer=tokenizer)
+    chunks=create_chunks(input_text,512) #creating chunk for using the whole resume text data
+    nlp = pipeline("ner", model=model, tokenizer=tokenizer) #putting all in the pipeline
+
     results=[]
     for chunk in chunks:
         chunk=' '.join(chunk)
         ner_results=nlp(chunk)
         results.append(ner_results)
-    logging.info("Completing the prediction of every words")
-    locations=loading_cities()
+    
+    locations=loading_cities() #loading the USA cities name
     for result in results:
         for x in result:
-            #print(x)
-            entity=x['entity']
-            # print(entity)
-            if entity in ["B-LOC", "I-LOC","B-ORG","I-ORG"]:
-                #print(x['word'])
+            entity=x['entity'] #separating the classes
+
+            #only checking the location and organization NER
+            if entity in ["B-LOC", "I-LOC","B-ORG","I-ORG"]:  
                 if x['word'] in locations:
-                    #print(entity)
-                # if data['city'].isin(x['word']).any():
-                    #print(x['word'])
                     return f"Application {docx_path} is from the USA"
+                
     return {f"Application {docx_path} is not from the USA"}
     
     
